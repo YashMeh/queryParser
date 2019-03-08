@@ -6,7 +6,14 @@ var deviceSchema=new mongoose.Schema({
     },
     sessionID:{
         type:String
+    },
+    data:{
+        type:String
+    },
+    publicKey:{
+        type:String
     }
+    
     
 })	
 module.exports=mongoose.model("device",deviceSchema);
