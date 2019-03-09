@@ -4,7 +4,7 @@
 npm install
 ```
 
-## How to rub
+## How to run
 
 ```bash
 node main.js
