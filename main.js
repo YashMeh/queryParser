@@ -1,19 +1,26 @@
+const dotenv=require("dotenv");
+dotenv.config();
 var express = require('express');
 var app = express();
 var server = require('http').createServer(app);
 var mongoose=require("mongoose");
 var port=process.env.PORT || 3000;
 var io = require('socket.io')(server);
+
+//Defining namespaces
 var registration=io.of('/register');
 var query=io.of('/query');
 var client=io.of('/client');
-var device=require("./models/device")
-//var global=[];
-mongoose.connect("mongodb://localhost/senzJS",{useNewUrlParser:true}).then((e)=>{
+var device=require("./models/device");
+
+//Connecting to mongoose
+var uri="mongodb://localhost/senzJS";
+mongoose.connect(uri,{useNewUrlParser:true}).then((e)=>{
     console.log("MongoDB Connected");
 }).catch((err)=>{
     console.log(err);
 })
+//databaseMethods
 var alreadyPresent=(name)=>{
     return new Promise((resolve,reject)=>{
         device.find({name:name}).then((result)=>{
@@ -60,11 +67,14 @@ var assignID=(name,sessionID)=>{
 var sendData=(message,targetDevice)=>{
     return new Promise((resolve,reject)=>{
         device.find({name:targetDevice}).then((receiver)=>{
+            console.log(".........................")
+            console.log(receiver)
             io.of("/client").to(receiver[0].sessionID).emit("received",{data:message});
             resolve("Sent");
         })
     })
 }
+//Socket Methods
 var handleRegistration=(socket)=>{
     
     console.log("Connection request accepted from socket :"+socket.id.substr(10,));
@@ -140,9 +150,19 @@ var handleConnection=(socket)=>{
 
     })
 }
+//Calling namespaces
 client.on("connection",handleConnection)
 registration.on("connection",handleRegistration);
 query.on("connection",handleQuery);
+
+//express app setup
+app.use(express.static(__dirname+'/views'));
+
+//home route
+app.get("/",(req,res)=>{
+    res.sendFile("app.html",{root:__dirname+"/views"})
+})
+//Starting server
 server.listen(port,function(err){
     if(err)
     {
